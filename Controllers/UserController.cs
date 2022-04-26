@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Wsr.Models;
+using Wsr.Data;
 
 namespace Wsr.Controllers
 {
@@ -9,11 +11,12 @@ namespace Wsr.Controllers
     public class UserController : ControllerBase
     {
         [HttpGet]
-        public List<User> Get()
+        public IEnumerable<User> Get()
         {
-            List<User> users = new List<User>();
-            users.Add(new User("JohnyKAsteroid", "45hj23j523jnpsdgkpng", false));
-            return users;
+            using (var context = new ApiContext())
+            {
+                return context.Users.ToArray();
+            }
         }
     }
 }

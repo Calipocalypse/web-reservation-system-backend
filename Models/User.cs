@@ -11,6 +11,7 @@ namespace Wsr.Models
 
         public User(string name, string hashedPassword, bool isAdmin)
         {
+            Id = Guid.NewGuid();
             Name = name;
             HashedPassword = hashedPassword;
             IsAdmin = isAdmin;
