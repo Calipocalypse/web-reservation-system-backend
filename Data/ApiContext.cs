@@ -20,8 +20,8 @@ namespace Wsr.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>().HasData(
-                new User("Zbyszek", "p2i35nhjp1ip", true),
-                new User("Marcel", "p2i35nhjp1ip", false)
+                new User("Zbyszek", "test", true),
+                new User("Marcel", "test", false)
                 );
         }
     }
