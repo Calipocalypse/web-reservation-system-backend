@@ -8,13 +8,14 @@ namespace Wsr.Models
         public Guid Id { get; set; }
         public string Name { get; set; }
         public string HashedPassword { get; set; }
+        public string Salt { get; set; }
         public bool IsAdmin { get; set; }
 
         public User(string name, string password, bool isAdmin)
         {
             Id = Guid.NewGuid();
             Name = name;
-            HashedPassword = Hasher.Hash(password);
+            (HashedPassword, Salt) = Hasher.Hash(password);
             IsAdmin = isAdmin;
         }
         public User()

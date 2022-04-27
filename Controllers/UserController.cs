@@ -21,7 +21,6 @@ namespace Wsr.Controllers
         }
     }
 
-
     [ApiController]
     [Route("test")]
     public class Test : ControllerBase
@@ -31,22 +30,21 @@ namespace Wsr.Controllers
         {
             using (var context = new ApiContext())
             {
-                string password = "Password12345";
-
+                var firstUser = context.Users.FirstOrDefault();
                 return new string[]
                 {
-                    Hasher.Hash("hello word"),
-                    Hasher.Hash("12345"),
-                    Hasher.Hash("rerere"),
-                    Hasher.Hash("25sdfcdsas xcvxczczgfwet235g"),
-                    Hasher.Hash("00000000"),
-                    Hasher.Hash("tes234523t"),
-                    Hasher.Hash("xxxxxxxxxxxxxxxxx"),
+                    Hasher.Hash("hello word").Item1,
+                    Hasher.Hash("12345").Item1,
+                    Hasher.Hash("rerere").Item1,
+                    Hasher.Hash("25sdfcdsas xcvxczczgfwet235g").Item1,
+                    Hasher.Hash("00000000").Item1,
+                    Hasher.Hash("tes234523t").Item1,
+                    Hasher.Hash("xxxxxxxxxxxxxxxxx","staticHash").Item1,
 
-                    Hasher.VerifyHash(Hasher.Hash(password),password).ToString()
+                    Hasher.VerifyHash("b2e44b332807361cd9c13b898614595354c3ffcd7265c472dc702212f82859c8","fw7Onh6DmRfovAM/","test").ToString(),
+                    Hasher.VerifyHash(firstUser.HashedPassword,firstUser.Salt,"test").ToString()
                 };
             }
-
         }
     }
 }
