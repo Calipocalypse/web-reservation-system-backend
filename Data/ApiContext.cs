@@ -10,6 +10,7 @@ namespace Wsr.Data
     public class ApiContext : DbContext
     {
         public DbSet<User> Users { get; set; }
+        public DbSet<Session> Sessions { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
