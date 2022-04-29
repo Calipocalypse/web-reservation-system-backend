@@ -41,7 +41,7 @@ namespace Wsr.Controllers
                     Hasher.Hash("tes234523t").Item1,
                     Hasher.Hash("xxxxxxxxxxxxxxxxx","staticHash").Item1,
 
-                    Hasher.VerifyHash("b2e44b332807361cd9c13b898614595354c3ffcd7265c472dc702212f82859c8","fw7Onh6DmRfovAM/","test").ToString(),
+                    Hasher.VerifyHash("f0aee99ae5d1a00725e7fad85320828ae7be00844eb071c322a839c47a73472b","jZnBN2IPrczxdV6E","test").ToString(),
                     Hasher.VerifyHash(firstUser.HashedPassword,firstUser.Salt,"test").ToString()
                 };
             }
