@@ -15,11 +15,11 @@ namespace Wsr.Controllers
     {
         [Route("[controller]" + "/login")]
         [HttpPost]
-        public bool Post([FromForm] string login, [FromForm] string password)
+        public async Task<IActionResult> Post([FromForm] string login, [FromForm] string password)
         {
             if (SessionVerifier.IsLoggedSucessfully(login, password))
             {
-                using (var context = new ApiContext())
+                 using(var context = new ApiContext())
                 {
                     var newSession = new Session(login);
                     // 1:3.4028237e+38 probability that it will happen, lol
@@ -28,24 +28,24 @@ namespace Wsr.Controllers
                         newSession = new Session(login);
                     }
                     context.Add(newSession);
-                    context.SaveChanges();
+                    await context.SaveChangesAsync();
                 }
-                return true;
+                return Ok();
             }
-            else return false;
+            else return Unauthorized();
         }
         [Route("[controller]")]
-        [HttpPost]
-        public bool AuthorizeSession([FromForm] string sessionCookie, [FromForm] string userName)
+        [HttpGet]
+        public IActionResult AuthorizeSession([FromForm] string sessionCookie, [FromForm] string userName)
         {
-            if (SessionVerifier.IsSessionVerifiedSucessfully(sessionCookie, userName)) return true;
+            if (SessionVerifier.IsSessionVerifiedSucessfully(sessionCookie, userName)) return Ok();
 
-            return false;
+            return Unauthorized();
         }
 
         [Route("[controller]")]
         [HttpDelete]
-        public IActionResult Delete([FromForm] string sessionCookie, [FromForm] string userName)
+        public async Task<IActionResult> Delete([FromForm] string sessionCookie, [FromForm] string userName)
         {
             if (SessionVerifier.IsSessionVerifiedSucessfully(sessionCookie, userName))
             {
@@ -54,7 +54,7 @@ namespace Wsr.Controllers
                     IEnumerable<Session> sessionsToRemove = context.Sessions.Where(s => s.User == userName);
                     var test = sessionsToRemove.Count();
                     context.RemoveRange(sessionsToRemove);
-                    context.SaveChanges();
+                    await context.SaveChangesAsync();
                     return Ok();
                 }
             }

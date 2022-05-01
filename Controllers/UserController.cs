@@ -12,11 +12,11 @@ namespace Wsr.Controllers
     public class UserController : ControllerBase
     {
         [HttpGet]
-        public IEnumerable<User> Get()
+        public IActionResult Get()
         {
             using (var context = new ApiContext())
             {
-                return context.Users.ToArray();
+                return Ok(context.Users.ToArray());
             }
         }
     }
