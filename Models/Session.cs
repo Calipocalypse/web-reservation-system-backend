@@ -24,7 +24,12 @@ namespace Wsr.Models
 
         private string GenerateCookie() //ToDO
         {
-            return "25hp02i3op5nh1";
+            Random random = new Random();
+            byte[] asciiBytes = new byte[16];
+            random.NextBytes(asciiBytes);
+            string cookie = Convert.ToBase64String(asciiBytes);
+            
+            return cookie;
         }
 
         public Session()

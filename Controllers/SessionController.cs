@@ -22,6 +22,11 @@ namespace Wsr.Controllers
                 using (var context = new ApiContext())
                 {
                     var newSession = new Session(login);
+                    // 1:3.4028237e+38 probability that it will happen, lol
+                    while (context.Sessions.Where(s => s.Cookie == newSession.Cookie).Count() > 0)
+                    {
+                        newSession = new Session(login);
+                    }
                     context.Add(newSession);
                     context.SaveChanges();
                 }
@@ -36,6 +41,24 @@ namespace Wsr.Controllers
             if (SessionVerifier.IsSessionVerifiedSucessfully(sessionCookie, userName)) return true;
 
             return false;
+        }
+
+        [Route("[controller]")]
+        [HttpDelete]
+        public IActionResult Delete([FromForm] string sessionCookie, [FromForm] string userName)
+        {
+            if (SessionVerifier.IsSessionVerifiedSucessfully(sessionCookie, userName))
+            {
+                using (var context = new ApiContext())
+                {
+                    IEnumerable<Session> sessionsToRemove = context.Sessions.Where(s => s.User == userName);
+                    var test = sessionsToRemove.Count();
+                    context.RemoveRange(sessionsToRemove);
+                    context.SaveChanges();
+                    return Ok();
+                }
+            }
+            else return Unauthorized();
         }
     }
 }
