@@ -11,6 +11,7 @@ namespace Wsr.Data
     {
         public DbSet<User> Users { get; set; }
         public DbSet<Session> Sessions { get; set; }
+        public DbSet<PoolTable> PoolTables { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -23,6 +24,11 @@ namespace Wsr.Data
             modelBuilder.Entity<User>().HasData(
                 new User("Zbyszek", "test", true),
                 new User("Marcel", "test", false)
+                );
+
+            modelBuilder.Entity<PoolTable>().HasData(
+                new PoolTable("Stół 1"),
+                new PoolTable("Stół 2")
                 );
         }
     }
