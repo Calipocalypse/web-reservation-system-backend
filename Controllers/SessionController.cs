@@ -13,7 +13,7 @@ namespace Wsr.Controllers
     [ApiController]
     public class SessionController : ControllerBase
     {
-        [Route("[controller]" + "/login")]
+        [Route("[controller]")]
         [HttpPost]
         public async Task<IActionResult> Post([FromForm] string login, [FromForm] string password)
         {
@@ -29,8 +29,8 @@ namespace Wsr.Controllers
                     }
                     context.Add(newSession);
                     await context.SaveChangesAsync();
+                    return Ok(newSession.Cookie);
                 }
-                return Ok();
             }
             else return Unauthorized();
         }
