@@ -11,13 +11,14 @@ namespace Wsr.Models
         public string Name { get; set; }
         public string Description { get; set; }
         public Cost Cost { get; set; }
+        public Guid CostId { get; set; }
 
-        public PoolTable(string name, string description, Cost cost)
+        public PoolTable(string name, string description, Guid costId)
         {
             Id = Guid.NewGuid();
             Name = name;
             Description = description;
-            Cost = cost;
+            CostId = costId;
         }
     }
 }
