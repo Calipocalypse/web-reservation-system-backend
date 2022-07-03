@@ -13,6 +13,7 @@ namespace Wsr.Data
         public DbSet<Session> Sessions { get; set; }
         public DbSet<Cost> Costs { get; set; }
         public DbSet<PoolTable> PoolTables { get; set; }
+        public DbSet<Note> Notes { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
