@@ -10,8 +10,8 @@ using Wsr.Data;
 namespace Wsr.Migrations
 {
     [DbContext(typeof(ApiContext))]
-    [Migration("20220509163707_Added PoolTables")]
-    partial class AddedPoolTables
+    [Migration("20220703133735_Added Seeding back")]
+    partial class AddedSeedingback
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -21,28 +21,55 @@ namespace Wsr.Migrations
                 .HasAnnotation("ProductVersion", "5.0.16")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("Wsr.Models.PoolTable", b =>
+            modelBuilder.Entity("Wsr.Models.Cost", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CostValue")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
+                    b.ToTable("Cost");
+                });
+
+            modelBuilder.Entity("Wsr.Models.PoolTable", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CostId");
+
                     b.ToTable("PoolTables");
 
                     b.HasData(
                         new
                         {
-                            Id = new Guid("6a6b9908-a634-4ee4-b709-6a1d11d9c617"),
+                            Id = new Guid("88820976-6bc6-40e2-b3af-583c56459ea1"),
+                            Description = "Pierwszy od okna",
                             Name = "Stół 1"
                         },
                         new
                         {
-                            Id = new Guid("31bccfbe-1b8f-42a8-abf9-9507f3e9e95c"),
+                            Id = new Guid("8d971194-dfa1-4288-97e8-21af2736a5da"),
+                            Description = "Przy obrazie Johnego K Asteroida",
                             Name = "Stół 2"
                         });
                 });
@@ -92,20 +119,29 @@ namespace Wsr.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("9a2569be-2e85-4a74-83cc-617488aaef13"),
-                            HashedPassword = "eb6074157928e8247f4961d2986755af56be13d471c505f78aad24d69d0776ac",
+                            Id = new Guid("cebe3f55-e086-413b-a031-2ffdc3708530"),
+                            HashedPassword = "6319515c904e91c9b5563aa82ffb248725630f741b58ea900f7ef088dbf4f703",
                             IsAdmin = true,
                             Name = "Zbyszek",
-                            Salt = "nJubHNpBjFzAGl0Y"
+                            Salt = "rY8wXiQK4kw+Mpcw"
                         },
                         new
                         {
-                            Id = new Guid("0e6f3ffd-d62d-428f-b73a-9784d27af0ba"),
-                            HashedPassword = "1a7ca80aa0ea0078155976de82b382a437b1e604267bfb23ffc8ba85743a6d22",
+                            Id = new Guid("cc2dbbd7-f769-46b9-bb73-3bb31a03e673"),
+                            HashedPassword = "1cb09975dfe03db330b6a4688b932727d2ffc4f55a9b4d7db933a728eec33a76",
                             IsAdmin = false,
                             Name = "Marcel",
-                            Salt = "stX0BAQMrBQ+gOkf"
+                            Salt = "p/Nta71H44LTcd8Z"
                         });
+                });
+
+            modelBuilder.Entity("Wsr.Models.PoolTable", b =>
+                {
+                    b.HasOne("Wsr.Models.Cost", "Cost")
+                        .WithMany()
+                        .HasForeignKey("CostId");
+
+                    b.Navigation("Cost");
                 });
 #pragma warning restore 612, 618
         }

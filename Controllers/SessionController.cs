@@ -38,6 +38,7 @@ namespace Wsr.Controllers
         [HttpGet]
         public IActionResult AuthorizeSession([FromForm] string sessionCookie, [FromForm] string userName)
         {
+            //Removes ALL sessions where id matches to USER
             if (SessionVerifier.IsSessionVerifiedSucessfully(sessionCookie, userName)) return Ok();
 
             return Unauthorized();
@@ -60,5 +61,6 @@ namespace Wsr.Controllers
             }
             else return Unauthorized();
         }
+
     }
 }

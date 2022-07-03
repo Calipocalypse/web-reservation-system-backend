@@ -20,7 +20,8 @@ namespace Wsr.Controllers
             {
                 using (var context = new ApiContext())
                 {
-                    return Ok(context.PoolTables.ToArray());
+                    //return Ok(context.PoolTables.ToArray());
+                    return Ok();
                 }
             }
             else return Unauthorized();

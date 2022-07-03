@@ -47,6 +47,7 @@ namespace Wsr.Misc
             }
         }
 
+
         //Destroy cookie method ~ OnLogoffAttempt ToDo
     }
 }
