@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Wsr.Data;
 
 namespace Wsr.Migrations
 {
     [DbContext(typeof(ApiContext))]
-    partial class ApiContextModelSnapshot : ModelSnapshot
+    [Migration("20220708101154_Added Reservations-fix")]
+    partial class AddedReservationsfix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,13 +95,13 @@ namespace Wsr.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("NoteId")
+                    b.Property<Guid?>("NoteId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("PoolTableId")
+                    b.Property<Guid?>("PoolTableId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("StartDate")
@@ -172,15 +174,11 @@ namespace Wsr.Migrations
                 {
                     b.HasOne("Wsr.Models.Note", "Note")
                         .WithMany()
-                        .HasForeignKey("NoteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("NoteId");
 
                     b.HasOne("Wsr.Models.PoolTable", "PoolTable")
                         .WithMany()
-                        .HasForeignKey("PoolTableId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PoolTableId");
 
                     b.Navigation("Note");
 
