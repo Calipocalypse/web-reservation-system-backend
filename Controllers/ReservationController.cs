@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Globalization;
 using System.Linq;
 using Wsr.Data;
 using Wsr.Models;
@@ -10,6 +11,8 @@ namespace Wsr.Controllers
     [Route("[controller]"+"s")]
     public class ReservationController : ControllerBase
     {
+        private const string dateFormat = "dd'/'MM'/'yyyy HH:mm:ss";
+
         [HttpGet]
         public IActionResult Get()
         {
@@ -25,9 +28,9 @@ namespace Wsr.Controllers
                                 ReservationBookerName = reservation.BookerName,
                                 ReservationBookerEmail = reservation.Email,
                                 ReservationBookerPhoneNumber = reservation.PhoneNumber,
-                                ReservationCreatedDate = reservation.CreatedDate,
-                                ReservationStartDate = reservation.StartDate,
-                                ReservationEndDate = reservation.EndDate,
+                                ReservationCreatedDate = reservation.CreatedDate.ToString(dateFormat),
+                                ReservationStartDate = reservation.StartDate.ToString(dateFormat),
+                                ReservationEndDate = reservation.EndDate.ToString(dateFormat),
                                 TableId = table.Id,
                                 TableName = table.Name,
                                 TableDescription = table.Description,
@@ -36,31 +39,77 @@ namespace Wsr.Controllers
                                 CostValue = cost.CostValue,
                                 NoteId = note.Id,
                                 NoteContent = note.Content,
-                                NoteCreatedDate = note.CreatedDate
+                                NoteCreatedDate = note.CreatedDate.ToString(dateFormat)
+                            };
+                return Ok(query.ToArray());
+            }
+        }
+
+        [HttpGet]
+        [Route("{id:Guid}")]
+        public IActionResult Get(Guid id)
+        {
+
+            using (var context = new ApiContext())
+            {
+                var query = from reservation in context.Reservations
+                            join note in context.Notes on reservation.NoteId equals note.Id
+                            join table in context.PoolTables on reservation.PoolTableId equals table.Id
+                            join cost in context.Costs on table.CostId equals cost.Id
+                            where reservation.Id == id
+                            select new
+                            {
+                                ReservationId = reservation.Id,
+                                ReservationBookerName = reservation.BookerName,
+                                ReservationBookerEmail = reservation.Email,
+                                ReservationBookerPhoneNumber = reservation.PhoneNumber,
+                                ReservationCreatedDate = reservation.CreatedDate.ToString(dateFormat),
+                                ReservationStartDate = reservation.StartDate.ToString(dateFormat),
+                                ReservationEndDate = reservation.EndDate.ToString(dateFormat),
+                                TableId = table.Id,
+                                TableName = table.Name,
+                                TableDescription = table.Description,
+                                CostId = table.CostId,
+                                CostName = cost.Name,
+                                CostValue = cost.CostValue,
+                                NoteId = note.Id,
+                                NoteContent = note.Content,
+                                NoteCreatedDate = note.CreatedDate.ToString(dateFormat)
                             };
                 return Ok(query.ToArray());
             }
         }
 
         [HttpPost]
-        public IActionResult Post([FromForm] Guid poolTableId, [FromForm] Guid noteId, [FromForm] string bookerName, [FromForm] string email, [FromForm] string phoneNumber)
+        public IActionResult Post([FromForm] Guid poolTableId, /*[FromForm] Guid? noteId,*/ [FromForm] string bookerName, [FromForm] string email, [FromForm] string phoneNumber, [FromForm] string startDate, [FromForm] string endDate)
         {
             using (var context = new ApiContext())
             {
-                var newReservation = new Reservation
-                {
-                    Id = Guid.NewGuid(),
-                    PoolTableId = poolTableId,
-                    NoteId = noteId,
-
-                }
-                /*
-                 https://www.codeproject.com/Questions/1020558/Convert-a-string-to-datetime-in-hour-format-in-csh
-                String strDate = "24/01/2022 00:00:00";
-                DateTime date = DateTime.ParseExact(strDate, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
-                Console.WriteLine(date);
-                */
+                var newNote = new Note("");
+                context.Add(newNote);
+                context.SaveChanges();
+                DateTime startDateD = DateTime.ParseExact(startDate, dateFormat, CultureInfo.InvariantCulture);
+                DateTime endDateD = DateTime.ParseExact(endDate, dateFormat, CultureInfo.InvariantCulture);
+                Reservation newReservation = new
+                    Reservation(poolTableId, newNote.Id, bookerName, email, phoneNumber, startDateD, endDateD);
+                context.Reservations.Add(newReservation);
+                context.SaveChanges();
+                return Ok();
             }
         }
+
+        [HttpDelete]
+        [Route("{id:Guid}")]
+        public IActionResult Delete(Guid id)
+        {
+            using (var context = new ApiContext())
+            {
+                var toDelete = context.Reservations.FirstOrDefault(r => r.Id == id);
+                context.Remove(toDelete);
+                context.SaveChanges();
+                return Ok();
+            }
+        }
+
     }
 }

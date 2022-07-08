@@ -93,7 +93,7 @@ namespace Wsr.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("NoteId")
+                    b.Property<Guid?>("NoteId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PhoneNumber")
@@ -172,9 +172,7 @@ namespace Wsr.Migrations
                 {
                     b.HasOne("Wsr.Models.Note", "Note")
                         .WithMany()
-                        .HasForeignKey("NoteId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("NoteId");
 
                     b.HasOne("Wsr.Models.PoolTable", "PoolTable")
                         .WithMany()

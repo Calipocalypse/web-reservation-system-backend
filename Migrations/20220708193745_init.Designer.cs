@@ -10,8 +10,8 @@ using Wsr.Data;
 namespace Wsr.Migrations
 {
     [DbContext(typeof(ApiContext))]
-    [Migration("20220703164829_Added pooltables")]
-    partial class Addedpooltables
+    [Migration("20220708193745_init")]
+    partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -38,6 +38,23 @@ namespace Wsr.Migrations
                     b.ToTable("Costs");
                 });
 
+            modelBuilder.Entity("Wsr.Models.Note", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Notes");
+                });
+
             modelBuilder.Entity("Wsr.Models.PoolTable", b =>
                 {
                     b.Property<Guid>("Id")
@@ -58,6 +75,45 @@ namespace Wsr.Migrations
                     b.HasIndex("CostId");
 
                     b.ToTable("PoolTables");
+                });
+
+            modelBuilder.Entity("Wsr.Models.Reservation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BookerName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("NoteId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("PoolTableId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NoteId");
+
+                    b.HasIndex("PoolTableId");
+
+                    b.ToTable("Reservations");
                 });
 
             modelBuilder.Entity("Wsr.Models.Session", b =>
@@ -112,6 +168,23 @@ namespace Wsr.Migrations
                         .IsRequired();
 
                     b.Navigation("Cost");
+                });
+
+            modelBuilder.Entity("Wsr.Models.Reservation", b =>
+                {
+                    b.HasOne("Wsr.Models.Note", "Note")
+                        .WithMany()
+                        .HasForeignKey("NoteId");
+
+                    b.HasOne("Wsr.Models.PoolTable", "PoolTable")
+                        .WithMany()
+                        .HasForeignKey("PoolTableId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Note");
+
+                    b.Navigation("PoolTable");
                 });
 #pragma warning restore 612, 618
         }
