@@ -111,5 +111,27 @@ namespace Wsr.Controllers
             }
         }
 
+        [HttpPatch]
+        [Route("{id:Guid}")]
+        public IActionResult Patch(Guid id, [FromForm] Guid poolTableId, /*[FromForm] Guid? noteId,*/ [FromForm] string bookerName, [FromForm] string email, [FromForm] string phoneNumber, [FromForm] string startDate, [FromForm] string endDate)
+        {
+            using (var context = new ApiContext())
+            {
+                var editedReservation = context.Reservations.FirstOrDefault(x => x.Id == id);
+                DateTime startDateD = DateTime.ParseExact(startDate, dateFormat, CultureInfo.InvariantCulture);
+                DateTime endDateD = DateTime.ParseExact(endDate, dateFormat, CultureInfo.InvariantCulture);
+                editedReservation.PoolTableId = poolTableId;
+                editedReservation.StartDate = startDateD;
+                editedReservation.EndDate = endDateD;
+                editedReservation.BookerName = bookerName;
+                editedReservation.PhoneNumber = phoneNumber;
+                editedReservation.Email = email;
+
+                context.Update(editedReservation);
+                context.SaveChanges();
+            }
+            return Ok();
+        }
+
     }
 }
