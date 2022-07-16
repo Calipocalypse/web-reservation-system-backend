@@ -14,14 +14,18 @@ namespace Wsr.Controllers
         private const string dateFormat = "dd'/'MM'/'yyyy HH:mm:ss";
 
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult Get([FromForm] string givenStartDate, [FromForm] string givenEndDate)
         {
+            DateTime givenStartDateD = DateTime.ParseExact(givenStartDate, dateFormat,CultureInfo.InvariantCulture);
+            DateTime givenEndDateD = DateTime.ParseExact(givenEndDate, dateFormat,CultureInfo.InvariantCulture);
             using (var context = new ApiContext())
             {
                 var query = from reservation in context.Reservations
                             join note in context.Notes on reservation.NoteId equals note.Id
                             join table in context.PoolTables on reservation.PoolTableId equals table.Id
                             join cost in context.Costs on table.CostId equals cost.Id
+                            where reservation.StartDate > givenStartDateD
+                            where reservation.EndDate < givenEndDateD
                             select new
                             {
                                 ReservationId = reservation.Id,

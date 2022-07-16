@@ -41,7 +41,7 @@ namespace Wsr.Controllers
                 PoolTable poolTable;
                 try { poolTable = context.PoolTables.Include("Cost").FirstOrDefault(x => x.Id == id); }
                 catch { return NotFound(); }
-                return Ok(poolTable.Cost.Name);
+                return Ok(poolTable);
             }
         }
 

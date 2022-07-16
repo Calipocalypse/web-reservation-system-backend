@@ -11,9 +11,9 @@ using Wsr.Data;
 namespace Wsr.Controllers
 {
     [ApiController]
+    [Route("[controller]")]
     public class SessionController : ControllerBase
     {
-        [Route("[controller]")]
         [HttpPost]
         public async Task<IActionResult> Post([FromForm] string login, [FromForm] string password)
         {
@@ -34,7 +34,6 @@ namespace Wsr.Controllers
             }
             else return Unauthorized();
         }
-        [Route("[controller]")]
         [HttpGet]
         public IActionResult AuthorizeSession([FromForm] string sessionCookie, [FromForm] string userName)
         {
@@ -44,7 +43,16 @@ namespace Wsr.Controllers
             return Unauthorized();
         }
 
-        [Route("[controller]")]
+        [Route("[controller]"+"s")]
+        [HttpGet]
+        public IActionResult ListSessions()
+        {
+            using (var context = new ApiContext())
+            {
+                return Ok(context.Sessions.ToArray());
+            }
+        }
+
         [HttpDelete]
         public async Task<IActionResult> Delete([FromForm] string sessionCookie, [FromForm] string userName)
         {
