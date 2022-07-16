@@ -10,8 +10,8 @@ using Wsr.Data;
 namespace Wsr.Migrations
 {
     [DbContext(typeof(ApiContext))]
-    [Migration("20220708193745_init")]
-    partial class init
+    [Migration("20220716145901_IsPaid added")]
+    partial class IsPaidadded
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -94,6 +94,9 @@ namespace Wsr.Migrations
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("bit");
 
                     b.Property<Guid?>("NoteId")
                         .HasColumnType("uniqueidentifier");

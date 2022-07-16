@@ -93,6 +93,9 @@ namespace Wsr.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("bit");
+
                     b.Property<Guid?>("NoteId")
                         .HasColumnType("uniqueidentifier");
 

@@ -43,7 +43,8 @@ namespace Wsr.Controllers
                                 CostValue = cost.CostValue,
                                 NoteId = note.Id,
                                 NoteContent = note.Content,
-                                NoteCreatedDate = note.CreatedDate.ToString(dateFormat)
+                                NoteCreatedDate = note.CreatedDate.ToString(dateFormat),
+                                IsPaid = reservation.IsPaid.ToString()
                             };
                 return Ok(query.ToArray());
             }
@@ -116,7 +117,7 @@ namespace Wsr.Controllers
         }
 
         [HttpPatch]
-        [Route("{id:Guid}")]
+        [Route("{id:Guid}"+"/")]
         public IActionResult Patch(Guid id, [FromForm] Guid poolTableId, /*[FromForm] Guid? noteId,*/ [FromForm] string bookerName, [FromForm] string email, [FromForm] string phoneNumber, [FromForm] string startDate, [FromForm] string endDate)
         {
             using (var context = new ApiContext())
@@ -132,6 +133,30 @@ namespace Wsr.Controllers
                 editedReservation.Email = email;
 
                 context.Update(editedReservation);
+                context.SaveChanges();
+            }
+            return Ok();
+        }
+
+        [HttpPatch]
+        [Route("{id:Guid}"+"/"+"{newPaidState}")]
+        public IActionResult Patch(Guid id, string newPaidState)
+        {
+            using (var context = new ApiContext())
+            {
+                var toUpdate = context.Reservations.FirstOrDefault(x => x.Id == id);
+                bool state;
+                switch(newPaidState.ToLower())
+                {
+                    case "paid": state = true;
+                        break;
+                    case "notpaid": state = false;
+                        break;
+                    default: state = false;
+                        break;
+                }
+                toUpdate.IsPaid = state;
+                context.Update(toUpdate);
                 context.SaveChanges();
             }
             return Ok();

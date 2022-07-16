@@ -14,12 +14,13 @@ namespace Wsr.Models
         public DateTime CreatedDate { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public bool IsPaid { get; set; }
 #nullable enable
         public Note? Note { get; set; }
         public Guid? NoteId { get; set; }
 #nullable disable
 
-        public Reservation(Guid tableId, Guid? noteId, string bookerName, string email, string phoneNumber, DateTime startDate, DateTime endDate)
+        public Reservation(Guid tableId, Guid? noteId, string bookerName, string email, string phoneNumber, DateTime startDate, DateTime endDate, bool isPaid = false)
         {
             Id = Guid.NewGuid();
             PoolTableId = tableId;
@@ -30,6 +31,7 @@ namespace Wsr.Models
             CreatedDate = DateTime.Now;
             StartDate = startDate;
             EndDate = endDate;
+            IsPaid = isPaid;
         }
 
         public Reservation() { }
