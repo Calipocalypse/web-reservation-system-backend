@@ -4,7 +4,7 @@ namespace Wsr.Models
 {
     public class Cost
     {
-        public Guid Id { get; init; }
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public decimal CostValue { get; set; }
 

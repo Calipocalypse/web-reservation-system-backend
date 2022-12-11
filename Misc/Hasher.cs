@@ -10,7 +10,7 @@ namespace Wsr.Misc
 {
     public static class Hasher
     {
-        public static (string, string) Hash(string toHash, string readableSalt = null)
+        public static (string hash, string salt) Hash(string toHash, string readableSalt = null)
         {
 
             /* 1. Generating salt */

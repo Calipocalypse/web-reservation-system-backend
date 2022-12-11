@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Wsr.Data;
 using Wsr.Models;
 
@@ -19,6 +20,13 @@ namespace Wsr.Controllers
                 context.Add(new Cost("Normalny", 99.99m));
                 context.Add(new Cost("Ulgowy", 49.99m));
             }
+            return Ok();
+        }
+
+        [Authorize(Roles = "Administrator")]
+        [HttpGet]
+        public IActionResult SeederMethod2()
+        {
             return Ok();
         }
     }

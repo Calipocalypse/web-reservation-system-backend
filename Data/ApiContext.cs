@@ -4,13 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Wsr.Models;
+using Wsr.Models.Authentication;
 
 namespace Wsr.Data
 {
     public class ApiContext : DbContext
     {
-        public DbSet<User> Users { get; set; }
-        public DbSet<Session> Sessions { get; set; }
+        //public DbSet<User> Users { get; set; }
+        public DbSet<UserModel> Users { get; set; }
         public DbSet<Cost> Costs { get; set; }
         public DbSet<PoolTable> PoolTables { get; set; }
         public DbSet<Note> Notes { get; set; }

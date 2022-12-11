@@ -7,7 +7,7 @@ namespace Wsr.Models
 {
     public class PoolTable
     {
-        public Guid Id { get; init; }
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public Cost Cost { get; set; }
