@@ -1,10 +1,14 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.ComponentModel.DataAnnotations;
 
-namespace Wsr.Models
+namespace Wsr.Models.Database
 {
     public class Note
     {
+        [Key]
         public Guid Id { get; set; }
+        [Required]
         public string Content { get; set; }
         public DateTime CreatedDate { get; set; }
 

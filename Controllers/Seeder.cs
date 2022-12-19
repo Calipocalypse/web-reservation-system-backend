@@ -1,14 +1,19 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Wsr.Data;
+using Wsr.Misc;
 using Wsr.Models;
+using Wsr.Models.Authentication.Enums;
+using Wsr.Models.Database;
 
 namespace Wsr.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("SeedRoute")]
     public class Seeder : ControllerBase
     {
+        [AuthorizeRole(UserRole.Administrator)]
         [HttpPost]
         public IActionResult SeederMethod()
         {
@@ -23,7 +28,7 @@ namespace Wsr.Controllers
             return Ok();
         }
 
-        [Authorize(Roles = "Administrator")]
+        [AuthorizeRole(UserRole.Administrator)]
         [HttpGet]
         public IActionResult SeederMethod2()
         {

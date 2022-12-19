@@ -1,23 +1,48 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using Wsr.Data;
-using Wsr.Models;
+using Wsr.Misc;
+using Wsr.Models.Authentication.Enums;
+using Wsr.Models.Database;
+using Wsr.Models.Exceptions;
+using Wsr.Models.JsonModels;
 
 namespace Wsr.Controllers
 {
     [ApiController]
-    [Route("[controller]"+"s")]
+    [Route("[controller]" + "s")]
+    [Authorize]
     public class ReservationController : ControllerBase
     {
-        private const string dateFormat = "dd'/'MM'/'yyyy HH:mm:ss";
+        private const string dateFormat = "dd'/'MM'/'yyyy HH:mm";
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpGet]
-        public IActionResult Get([FromForm] string givenStartDate, [FromForm] string givenEndDate)
+        public async Task<IActionResult> Get([FromBody] TimeScopeDto timeScopeDto)
         {
-            DateTime givenStartDateD = DateTime.ParseExact(givenStartDate, dateFormat,CultureInfo.InvariantCulture);
-            DateTime givenEndDateD = DateTime.ParseExact(givenEndDate, dateFormat,CultureInfo.InvariantCulture);
+            var givenStartDateD = DateTime.ParseExact(timeScopeDto.StartDate, dateFormat, CultureInfo.InvariantCulture);
+            var givenEndDateD = DateTime.ParseExact(timeScopeDto.EndDate, dateFormat, CultureInfo.InvariantCulture);
+            var context = new ApiContext();
+            var query = from reservation in context.Reservations
+                        where reservation.StartDate > givenStartDateD
+                        where reservation.EndDate < givenEndDateD
+                        select reservation;
+            var result = await query.ToArrayAsync();
+            return Ok(result);
+        }
+
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
+        [HttpGet]
+        [Route("details")]
+        public async Task<IActionResult> GetDetailed([FromBody] TimeScopeDto timeScopeDto)
+        {
+            var givenStartDateD = ParseDate(timeScopeDto.StartDate);
+            var givenEndDateD = ParseDate(timeScopeDto.EndDate);
             using (var context = new ApiContext())
             {
                 var query = from reservation in context.Reservations
@@ -46,15 +71,27 @@ namespace Wsr.Controllers
                                 NoteCreatedDate = note.CreatedDate.ToString(dateFormat),
                                 IsPaid = reservation.IsPaid.ToString()
                             };
-                return Ok(query.ToArray());
+                return Ok(await query.ToArrayAsync());
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpGet]
         [Route("{id:Guid}")]
-        public IActionResult Get(Guid id)
+        public async Task<IActionResult> GetDetailed(Guid id)
         {
+            using (var context = new ApiContext())
+            {
+                var wantedReservation = await context.Reservations.FirstAsync(x => x.Id == id);
+                return Ok(wantedReservation);
+            }
+        }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
+        [HttpGet]
+        [Route("{id:Guid}" + "/details")]
+        public async Task<IActionResult> Get(Guid id)
+        {
             using (var context = new ApiContext())
             {
                 var query = from reservation in context.Reservations
@@ -81,85 +118,199 @@ namespace Wsr.Controllers
                                 NoteContent = note.Content,
                                 NoteCreatedDate = note.CreatedDate.ToString(dateFormat)
                             };
-                return Ok(query.ToArray());
+                return Ok(await query.ToArrayAsync());
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpPost]
-        public IActionResult Post([FromForm] Guid poolTableId, /*[FromForm] Guid? noteId,*/ [FromForm] string bookerName, [FromForm] string email, [FromForm] string phoneNumber, [FromForm] string startDate, [FromForm] string endDate)
+        public async Task<IActionResult> Post(ReservationDto reservationDto)
         {
-            using (var context = new ApiContext())
+            try
             {
-                var newNote = new Note("");
-                context.Add(newNote);
-                context.SaveChanges();
-                DateTime startDateD = DateTime.ParseExact(startDate, dateFormat, CultureInfo.InvariantCulture);
-                DateTime endDateD = DateTime.ParseExact(endDate, dateFormat, CultureInfo.InvariantCulture);
-                Reservation newReservation = new
-                    Reservation(poolTableId, newNote.Id, bookerName, email, phoneNumber, startDateD, endDateD);
-                context.Reservations.Add(newReservation);
-                context.SaveChanges();
-                return Ok();
+                var reservation = new Reservation();
+
+                if (reservationDto.PoolTableId != null)
+                {
+                    reservation.PoolTableId = ParseGuid(reservationDto.PoolTableId);
+                }
+                else
+                {
+                    var message = "PoolTableId is required";
+                    return BadRequest(message);
+                }
+
+                if (reservationDto.BookerName != null)
+                {
+                    reservation.BookerName = reservationDto.BookerName;
+                }
+                else
+                {
+                    var message = "BookerName is required";
+                    return BadRequest(message);
+                }
+
+                if (reservationDto.Email != null)
+                {
+                    reservation.Email = reservationDto.Email;
+                }
+
+                if (reservationDto.PhoneNumber != null)
+                {
+                    reservation.PhoneNumber = reservationDto.PhoneNumber;
+                }
+
+                if (reservationDto.StartDate != null)
+                {
+                    reservation.StartDate = ParseDate(reservationDto.StartDate);
+                }
+                else
+                {
+                    var message = "StartDate is required";
+                    return BadRequest(message);
+                }
+
+                if (reservationDto.EndDate != null)
+                {
+                    reservation.EndDate = ParseDate(reservationDto.EndDate);
+                }
+                else
+                {
+                    var message = "EndDate is required";
+                    return BadRequest(message);
+                }
+
+                if (reservationDto.IsPaid != null)
+                {
+                    reservation.IsPaid = ParseBool(reservationDto.IsPaid);
+                }
+
+                if (reservationDto.NoteId != null)
+                {
+                    reservation.NoteId = ParseGuid(reservationDto.NoteId);
+                }
+
+                using (var context = new ApiContext())
+                {
+                    context.Reservations.Add(reservation);
+                    await context.SaveChangesAsync();
+                    return Ok();
+                }
+            }
+            catch (GuidParseFailedException)
+            {
+                return BadRequest("Guid parsing failed");
+            }
+            catch (DateParseFailedException)
+            {
+                return BadRequest("DateTime parsing failed");
+            }
+            catch (BoolParseFailedException)
+            {
+                return BadRequest("DateTime parsing failed");
+            }
+            catch
+            {
+                return StatusCode(500);
             }
         }
 
+        private bool ParseBool(string probablyBool)
+        {
+            if (bool.TryParse(probablyBool, out var result))
+            {
+                return result;
+            }
+            throw new BoolParseFailedException();
+        }
+
+        private Guid ParseGuid(string probablyGuid)
+        {
+            if (Guid.TryParse(probablyGuid, out Guid result))
+            {
+                return result;
+            }
+            else
+            {
+                throw new GuidParseFailedException();
+            }
+        }
+        private DateTime ParseDate(string probablyGuid)
+        {
+            if (DateTime.TryParseExact(probablyGuid, dateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime result))
+            {
+                return result;
+            }
+            else
+            {
+                throw new DateParseFailedException();
+            }
+        }
+
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpDelete]
         [Route("{id:Guid}")]
-        public IActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
             using (var context = new ApiContext())
             {
                 var toDelete = context.Reservations.FirstOrDefault(r => r.Id == id);
+                if (toDelete == null)
+                {
+                    return NotFound();
+                }
                 context.Remove(toDelete);
-                context.SaveChanges();
+                await context.SaveChangesAsync();
                 return Ok();
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpPatch]
-        [Route("{id:Guid}"+"/")]
-        public IActionResult Patch(Guid id, [FromForm] Guid poolTableId, /*[FromForm] Guid? noteId,*/ [FromForm] string bookerName, [FromForm] string email, [FromForm] string phoneNumber, [FromForm] string startDate, [FromForm] string endDate)
+        [Route("{id:Guid}")]
+        public async Task<IActionResult> Patch(Guid id, [FromQuery] ReservationDto reservationDto)
         {
             using (var context = new ApiContext())
             {
-                var editedReservation = context.Reservations.FirstOrDefault(x => x.Id == id);
-                DateTime startDateD = DateTime.ParseExact(startDate, dateFormat, CultureInfo.InvariantCulture);
-                DateTime endDateD = DateTime.ParseExact(endDate, dateFormat, CultureInfo.InvariantCulture);
-                editedReservation.PoolTableId = poolTableId;
-                editedReservation.StartDate = startDateD;
-                editedReservation.EndDate = endDateD;
-                editedReservation.BookerName = bookerName;
-                editedReservation.PhoneNumber = phoneNumber;
-                editedReservation.Email = email;
+                var toUpdate = await context.Reservations.FirstAsync(x => x.Id == id);
 
-                context.Update(editedReservation);
-                context.SaveChanges();
-            }
-            return Ok();
-        }
-
-        [HttpPatch]
-        [Route("{id:Guid}"+"/"+"{newPaidState}")]
-        public IActionResult Patch(Guid id, string newPaidState)
-        {
-            using (var context = new ApiContext())
-            {
-                var toUpdate = context.Reservations.FirstOrDefault(x => x.Id == id);
-                bool state;
-                switch(newPaidState.ToLower())
+                if (reservationDto.PoolTableId != null)
                 {
-                    case "paid": state = true;
-                        break;
-                    case "notpaid": state = false;
-                        break;
-                    default: state = false;
-                        break;
+                    toUpdate.PoolTableId = ParseGuid(reservationDto.PoolTableId);
                 }
-                toUpdate.IsPaid = state;
+                if (reservationDto.BookerName != null)
+                {
+                    toUpdate.BookerName = reservationDto.BookerName;
+                }
+                if (reservationDto.Email != null)
+                {
+                    toUpdate.Email = reservationDto.Email;
+                }
+                if (reservationDto.PhoneNumber != null)
+                {
+                    toUpdate.PhoneNumber = reservationDto.PhoneNumber;
+                }
+                if (reservationDto.StartDate != null)
+                {
+                    toUpdate.StartDate = ParseDate(reservationDto.StartDate);
+                }
+                if (reservationDto.EndDate != null)
+                {
+                    toUpdate.EndDate = ParseDate(reservationDto.EndDate);
+                }
+                if (reservationDto.IsPaid != null)
+                {
+                    toUpdate.IsPaid = ParseBool(reservationDto.IsPaid);
+                }
+                if (reservationDto.NoteId != null)
+                {
+                    toUpdate.NoteId = ParseGuid(reservationDto.NoteId);
+                }
+
                 context.Update(toUpdate);
-                context.SaveChanges();
+                await context.SaveChangesAsync();
+                return Ok();
             }
-            return Ok();
         }
 
     }

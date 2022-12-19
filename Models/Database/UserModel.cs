@@ -4,7 +4,7 @@ using Wsr.Misc;
 using Wsr.Models.Authentication.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace Wsr.Models.Authentication
+namespace Wsr.Models.Database
 {
     public class UserModel
     {
@@ -13,7 +13,6 @@ namespace Wsr.Models.Authentication
         public string HashedPassword { get; set; }
         public string Salt { get; set; }
         public UserRole Role { get; set; }
-        public bool MustResetPassword { get; set; }
 
         public UserModel(string userName, string password, UserRole role)
         {

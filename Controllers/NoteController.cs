@@ -1,73 +1,115 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using Wsr.Data;
-using Wsr.Models;
+using Wsr.Misc;
+using Wsr.Models.Authentication.Enums;
+using Wsr.Models.Database;
+using Wsr.Models.JsonModels;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace Wsr.Controllers
 {
     [ApiController]
     [Route("[controller]" + "s")]
+    [Authorize]
     public class NoteController : ControllerBase
     {
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpGet]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
             using (var context = new ApiContext())
             {
-                return Ok(context.Notes.ToArray());
+                var allNotes = await context.Notes.ToListAsync();
+                return Ok(allNotes);
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpGet]
         [Route("{id:Guid}")]
-        public IActionResult Get(Guid id)
+        public async Task<IActionResult> Get(Guid id)
         {
             using var context = new ApiContext();
             {
-                return Ok(context.Notes.FirstOrDefault(x=>x.Id==id));
+                var givenNote = await context.Notes.FirstOrDefaultAsync(x => x.Id == id);
+                return Ok(givenNote);
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpPost]
-        public IActionResult Post([FromForm] string content)
+        public async Task<IActionResult> Post([FromBody] NotePostDto content)
         {
-            using (var context = new ApiContext())
+            if (content.Content == null || content.Content == String.Empty)
             {
-                context.Add(new Note(content));
-                context.SaveChanges();
-                return Ok();
+                var message = "Content is null";
+                return BadRequest(message);
+            }
+            try
+            {
+                using (var context = new ApiContext())
+                {
+                    var note = new Note(content.Content);
+                    context.Add(note);
+                    await context.SaveChangesAsync();
+                    return Ok();
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(501, ex.Message);
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpDelete]
         [Route("{id:Guid}")]
-        public IActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            using (var context = new ApiContext())
+            try
             {
-                Note toDelete;
-                try { toDelete = context.Notes.FirstOrDefault(x => x.Id == id); }
-                catch { return BadRequest(); }
-                context.Remove(toDelete);
-                context.SaveChanges();
-                return Ok();
+                using (var context = new ApiContext())
+                {
+                    var toDelete = await context.Notes.FirstAsync(x => x.Id == id);
+                    if (toDelete is null)
+                    {
+                        return NotFound();
+                    }
+                    context.Remove(toDelete);
+                    await context.SaveChangesAsync();
+                    return Ok();
+                }
+            }
+            catch
+            {
+                return BadRequest();
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpPatch]
         [Route("{id:Guid}")]
-        public IActionResult Update(Guid id, [FromForm] string newContent)
+        public async Task<IActionResult> Update(Guid id, [FromQuery] string newContent)
         {
-            Note toUpdate;
-            using (var context = new ApiContext())
+            try
             {
-                try { toUpdate = context.Notes.FirstOrDefault(x => x.Id == id); }
-                catch { return BadRequest(); }
-                toUpdate.Content = newContent;
-                context.Update(toUpdate);
-                context.SaveChanges();
-                return Ok();
+                using (var context = new ApiContext())
+                {
+                    var toUpdate = await context.Notes.FirstAsync(x => x.Id == id);
+                    toUpdate.Content = newContent;
+                    context.Update(toUpdate);
+                    await context.SaveChangesAsync();
+                    return Ok();
+                }
+            }
+            catch
+            {
+                return BadRequest();
             }
         }
     }

@@ -5,92 +5,198 @@ using System.Linq;
 using System.Threading.Tasks;
 using Wsr.Misc;
 using Wsr.Data;
-using Wsr.Models;
 using Microsoft.EntityFrameworkCore;
+using Wsr.Models.Database;
+using Microsoft.AspNetCore.Authorization;
+using Wsr.Models.JsonModels;
+using Microsoft.EntityFrameworkCore.Internal;
+using Wsr.Models.Authentication.Enums;
 
 namespace Wsr.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]" + "s")]
     public class PoolTableController : ControllerBase
     {
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpGet]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
             using (var context = new ApiContext())
             {
-                var query = from table in context.PoolTables
-                            join cost in context.Costs on table.CostId equals cost.Id
-                            select new 
-                            {Id = table.Id,
+                var poolTables = await context.PoolTables.ToArrayAsync();
+                return Ok(poolTables);
+            }
+        }
+
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
+        [HttpGet]
+        [Route("details")]
+        public async Task<IActionResult> GetDetails()
+        {
+            var context = new ApiContext();
+            var query = from table in context.PoolTables
+                        join cost in context.Costs on table.CostId equals cost.Id
+                        select new
+                        {
+                            Id = table.Id,
                             Name = table.Name,
                             Description = table.Description,
                             CostId = table.CostId,
                             CostName = cost.Name,
-                            CostValue = cost.CostValue};
-                return Ok(query.ToArray());
-            }
+                            CostValue = cost.CostValue
+                        };
+
+            var process = await query.ToListAsync();
+            return Ok(process);
+
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpGet]
         [Route("{id:Guid}")]
-        public IActionResult Get(Guid id)
+        public async Task<IActionResult> Get(Guid id)
         {
             using (var context = new ApiContext())
             {
-                PoolTable poolTable;
-                try { poolTable = context.PoolTables.Include("Cost").FirstOrDefault(x => x.Id == id); }
-                catch { return NotFound(); }
-                return Ok(poolTable);
+                try 
+                {
+                    var poolTable = await context.PoolTables.ToArrayAsync();
+                    return Ok(poolTable);
+                }
+                catch 
+                { 
+                    return NotFound(); 
+                }
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
+        [HttpGet]
+        [Route("{id:Guid}/details")]
+        public async Task<IActionResult> GetDetails(Guid id)
+        {
+            var context = new ApiContext();
+            try
+            {
+                var query = await (from table in context.PoolTables
+                            join cost in context.Costs on table.CostId equals cost.Id
+                            where table.Id == id
+                            select new
+                            {
+                                Id = table.Id,
+                                Name = table.Name,
+                                Description = table.Description,
+                                CostId = table.CostId,
+                                CostName = cost.Name,
+                                CostValue = cost.CostValue
+                            }).FirstOrDefaultAsync();
+
+                return Ok(query);
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpPost]
-        public IActionResult Post([FromForm] string name, [FromForm] string description, [FromForm] string costGuid)
+        public async Task<IActionResult> Post([FromBody] PoolTableDto poolTableDto)
         {
-            Guid costId;
-            try { costId = Guid.Parse(costGuid); }
-            catch { return BadRequest(); }
-            PoolTable poolTableToAdd = new PoolTable(name, description, costId);
-            using (var context = new ApiContext())
+            if (!Guid.TryParse(poolTableDto.CostId, out var costId))
             {
-                context.Add(poolTableToAdd);
-                context.SaveChanges();
-                return Ok();
+                return BadRequest();
+            }
+
+            var poolTableToAdd = new PoolTable(poolTableDto.Name, poolTableDto.Description, costId);
+
+            try
+            {
+                using (var context = new ApiContext())
+                {
+                    context.Add(poolTableToAdd);
+                    await context.SaveChangesAsync();
+                    return Ok();
+                }
+            }
+            catch (DbUpdateException)
+            {
+                var message = "Bad input";
+                return BadRequest(message);
+            }
+            catch
+            {
+                return BadRequest();
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpDelete]
         [Route("{id:Guid}")]
-        public IActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
             using (var context = new ApiContext())
             {
-                PoolTable toDelete;
-                try { toDelete = context.PoolTables.FirstOrDefault(x => x.Id == id); }
-                catch { return BadRequest(); }
-                context.Remove(toDelete);
-                context.SaveChanges();
-                return Ok();
+                try 
+                {
+                    var toDelete = await context.PoolTables.FirstAsync(x => x.Id == id);
+                    context.Remove(toDelete);
+                    await context.SaveChangesAsync();
+                    return Ok();
+                }
+                catch 
+                { 
+                    return BadRequest(); 
+                }
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpPatch]
         [Route("{id:Guid}")]
-        public IActionResult Update(Guid id, [FromForm] string name, [FromForm] string description, [FromForm] Guid costId)
+        public async Task<IActionResult> Update(Guid id, [FromQuery] PoolTableDto poolTableDto)
         {
-            PoolTable poolTable;
             using(var context = new ApiContext())
             {
-                try { poolTable = context.PoolTables.FirstOrDefault(x => x.Id == id); }
-                catch { return BadRequest(); }
+                if (poolTableDto.Name == null && poolTableDto.Description == null && poolTableDto.CostId == null)
+                {
+                    var message = "All dto object fields are null";
+                    return BadRequest(message);
+                }
 
-                poolTable.Name = name;
-                poolTable.Description = description;
-                poolTable.CostId = costId;
+                var toUpdate = await context.PoolTables.FirstAsync(x => x.Id == id);
 
-                context.Update(poolTable);
-                context.SaveChanges();
+                if (poolTableDto.Name != null)
+                {
+                    toUpdate.Name = poolTableDto.Name;
+                }
+                
+                if (poolTableDto.Description != null)
+                {
+                    toUpdate.Description = poolTableDto.Description;
+                }
+
+                try
+                {
+                    if (poolTableDto.CostId != null)
+                    {
+                        if (!Guid.TryParse(poolTableDto.CostId, out var costId))
+                        {
+                            throw new Exception();
+                        }
+                        toUpdate.CostId = costId;
+                    }
+                }
+                catch
+                {
+                    var message = "Guid incorrect";
+                    return BadRequest(message);
+                }
+
+                context.Update(toUpdate);
+                await context.SaveChangesAsync();
             }
             return Ok();
         }

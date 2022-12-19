@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Wsr.Data;
 
 namespace Wsr.Migrations
 {
     [DbContext(typeof(ApiContext))]
-    partial class ApiContextModelSnapshot : ModelSnapshot
+    [Migration("20221217111418_BookerName not unique")]
+    partial class BookerNamenotunique
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -107,7 +109,7 @@ namespace Wsr.Migrations
                     b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("NoteId")
+                    b.Property<Guid>("NoteId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PhoneNumber")
@@ -162,7 +164,9 @@ namespace Wsr.Migrations
                 {
                     b.HasOne("Wsr.Models.Database.Note", "Note")
                         .WithMany()
-                        .HasForeignKey("NoteId");
+                        .HasForeignKey("NoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Wsr.Models.Database.PoolTable", "PoolTable")
                         .WithMany()

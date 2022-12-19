@@ -6,7 +6,7 @@ using Wsr.Data;
 using Wsr.Misc;
 using System;
 using Wsr.Models.Authentication.Enums;
-using Wsr.Models.Authentication;
+using Wsr.Models.Database;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
 using Wsr.Controllers.Misc;
@@ -22,13 +22,6 @@ namespace Wsr.Controllers
     [Authorize]
     public class UserController : ControllerBase
     {
-        [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            var accessToken = HttpContext.User.Claims.First(x => x.Type == ClaimTypes.NameIdentifier).Value;
-            return Ok(accessToken);
-        }
-
         ////Creating first administrator account
         [Route("register")]
         [AllowAnonymous]
@@ -118,6 +111,7 @@ namespace Wsr.Controllers
 
         [HttpPatch]
         [Route("{userName}")]
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         public IActionResult UpdatePasword(string userName, [FromBody] string newPassword)
         {
             using (var context = new ApiContext())

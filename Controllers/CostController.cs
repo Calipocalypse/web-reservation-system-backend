@@ -1,86 +1,131 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using Wsr.Data;
-using Wsr.Models;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Wsr.Data;
+using Wsr.Misc;
+using Wsr.Models.Authentication.Enums;
+using Wsr.Models.Database;
+using Wsr.Models.JsonModels;
 
 namespace Wsr.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("[controller]" + "s")]
     public class CostController : ControllerBase
     {
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpGet]
-        public IActionResult Get()
+        public async Task<IActionResult> Get()
         {
             using (var context = new ApiContext())
             {
-                return Ok(context.Costs.ToArray());
+                var costs = await context.Costs.ToArrayAsync();
+                return Ok(costs);
             }
-            //else return Unauthorized();
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpGet]
         [Route("{id:Guid}")]
-        public IActionResult Get(Guid id)
+        public async Task<IActionResult> Get(Guid id)
         {
             using (var context = new ApiContext())
             {
-                var cost = context.Costs.FirstOrDefault(x => x.Id == id);
+                var cost = await context.Costs.FirstAsync(x => x.Id == id);
                 return Ok(cost);
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpPost]
-        public IActionResult Post([FromForm] string name, [FromForm] string costValue) //For costValue xx,xx is valid
+        public async Task<IActionResult> Post([FromBody] CostPostDto costModel) //For costValue xx.xx is valid
         {
             using (var context = new ApiContext())
             {
-                decimal convertedValue = 0;
-                if (!Decimal.TryParse(costValue, out convertedValue)) return BadRequest();
+                string costValue = costModel.CostValue;
 
-                context.Add(new Cost(name, convertedValue));
-                context.SaveChanges();
-                return Ok();
+                try
+                {
+                    var convertedValue = ConvertStringToDecimal(costValue);
+                    var cost = new Cost(costModel.Name, convertedValue);
+                    context.Add(cost);
+                    await context.SaveChangesAsync();
+                    return Ok();
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.Message);
+                }
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpDelete]
         [Route("{id:Guid}")]
-        public IActionResult Delete(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
             using (var context = new ApiContext())
             {
-                Cost toDelete;
-                try { toDelete = context.Costs.FirstOrDefault(x => x.Id == id); }
-                catch { return NotFound(); }
-
-                context.Remove(toDelete);
-                context.SaveChanges();
-                return Ok();
+                try 
+                { 
+                    var toDelete = await context.Costs.FirstAsync(x => x.Id == id);
+                    context.Remove(toDelete);
+                    await context.SaveChangesAsync();
+                    return Ok();
+                }
+                catch 
+                { 
+                    return NotFound(); 
+                }
             }
         }
 
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpPatch]
         [Route("{id:Guid}")]
-        public IActionResult Update(Guid id,[FromForm] string name, [FromForm] string costValue)
+        public async Task<IActionResult> Update(Guid id, [FromQuery] CostPostDto costModel)
         {
             using (var context = new ApiContext())
             {
-                decimal convertedValue = 0;
-                if (!Decimal.TryParse(costValue, out convertedValue)) return BadRequest();
+                try
+                {
+                    var toUpdate = await context.Costs.FirstAsync(x => x.Id == id);
 
-                Cost toUpdate;
-                try { toUpdate = context.Costs.FirstOrDefault(x => x.Id == id); }
-                catch { return NotFound(); }
+                    if (costModel.CostValue != null)
+                    {
+                        var costValue = costModel.CostValue;
+                        var convertedValue = ConvertStringToDecimal(costValue);
+                        toUpdate.CostValue = convertedValue;
+                    }
 
-                toUpdate.CostValue = convertedValue;
-                toUpdate.Name = name;
+                    if (costModel.Name != null)
+                    {
+                        toUpdate.Name = costModel.Name;
+                    }
 
-                context.Update(toUpdate);
-                context.SaveChanges();
-                return Ok();
+                    context.Update(toUpdate);
+                    await context.SaveChangesAsync();
+                    return Ok();
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex.Message);
+                }
             }
+        }
+
+        private decimal ConvertStringToDecimal(string number)
+        {
+            if (!Decimal.TryParse(number, out var convertedValue))
+            {
+                var message = $"Can't convert {number} to decimal number. Use xx.xx as template";
+                throw new ArgumentException(message);
+            }
+            return convertedValue;
         }
 
     }

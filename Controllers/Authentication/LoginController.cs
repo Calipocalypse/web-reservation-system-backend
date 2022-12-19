@@ -11,7 +11,7 @@ using System.Text;
 using Wsr.Controllers.Misc;
 using Wsr.Data;
 using Wsr.Misc;
-using Wsr.Models.Authentication;
+using Wsr.Models.Database;
 using Wsr.Models.JsonModels;
 
 namespace Wsr.Controllers.Authentication

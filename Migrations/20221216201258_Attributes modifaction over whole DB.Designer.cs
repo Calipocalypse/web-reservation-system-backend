@@ -3,15 +3,17 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Wsr.Data;
 
 namespace Wsr.Migrations
 {
     [DbContext(typeof(ApiContext))]
-    partial class ApiContextModelSnapshot : ModelSnapshot
+    [Migration("20221216201258_Attributes modifaction over whole DB")]
+    partial class AttributesmodifactionoverwholeDB
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -93,7 +95,7 @@ namespace Wsr.Migrations
 
                     b.Property<string>("BookerName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
@@ -107,7 +109,7 @@ namespace Wsr.Migrations
                     b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
 
-                    b.Property<Guid?>("NoteId")
+                    b.Property<Guid>("NoteId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PhoneNumber")
@@ -120,6 +122,9 @@ namespace Wsr.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("BookerName")
+                        .IsUnique();
 
                     b.HasIndex("NoteId");
 
@@ -162,7 +167,9 @@ namespace Wsr.Migrations
                 {
                     b.HasOne("Wsr.Models.Database.Note", "Note")
                         .WithMany()
-                        .HasForeignKey("NoteId");
+                        .HasForeignKey("NoteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Wsr.Models.Database.PoolTable", "PoolTable")
                         .WithMany()

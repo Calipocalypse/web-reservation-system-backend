@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Wsr.Models;
-using Wsr.Models.Authentication;
+using Wsr.Models.Database;
 
 namespace Wsr.Data
 {
