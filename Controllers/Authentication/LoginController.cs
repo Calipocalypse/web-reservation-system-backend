@@ -35,7 +35,9 @@ namespace Wsr.Controllers.Authentication
             if (user != null)
             {
                 var token = Generate(user);
-                return Ok(token);
+                
+                var tokenDto = new TokenSendDto() { Token = token, Name = user.UserName, Role = user.Role.ToString() };
+                return Ok(tokenDto);
             }
 
             var message = new Error($"User of name {userLogin.Username} has not been found");
