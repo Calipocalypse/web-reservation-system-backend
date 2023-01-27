@@ -40,7 +40,7 @@ namespace Wsr.Controllers.Authentication
                 return Ok(tokenDto);
             }
 
-            var message = new Error($"User of name {userLogin.Username} has not been found");
+            var message = new Error($"User of name {userLogin.Username} doesn't exist or password doesn't match");
             return NotFound(message);
         }
 
