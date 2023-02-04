@@ -25,6 +25,7 @@ namespace Wsr.Controllers
             using (var context = new ApiContext())
             {
                 var allNotes = await context.Notes.ToListAsync();
+                allNotes.OrderByDescending(x => x.CreatedDate);
                 return Ok(allNotes);
             }
         }
