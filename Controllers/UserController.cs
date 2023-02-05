@@ -71,7 +71,7 @@ namespace Wsr.Controllers
                     return BadRequest(message);
                 }
 
-                var userAlreadyExists = true;//context.Users.Any(x => x.UserName == userLoginRole.UserName;
+                var userAlreadyExists = context.Users.Any(x => x.UserName == userLoginRole.UserName);
                 if (!userAlreadyExists)
                 {
                     var newUser = new UserModel(userLoginRole.UserName, userLoginRole.Password, userRole);
@@ -112,7 +112,7 @@ namespace Wsr.Controllers
         [HttpPatch]
         [Route("{userName}")]
         [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
-        public IActionResult UpdatePasword(string userName, [FromBody] string newPassword)
+        public IActionResult UpdatePasword(string userName, [FromBody] NewPasswordDto newPassword)
         {
             var userNameJwt = User.FindFirst(ClaimTypes.NameIdentifier).Value;
             var userRole = User.FindFirst(ClaimTypes.Role).Value;
@@ -127,12 +127,28 @@ namespace Wsr.Controllers
                 }
 
                 var toEdit = context.Users.FirstOrDefault(x => x.UserName == userName);
-                (string hashed, string salt) = Hasher.Hash(newPassword);
+                (string hashed, string salt) = Hasher.Hash(newPassword.Password);
                 toEdit.HashedPassword = hashed;
                 toEdit.Salt = salt;
                 context.Update(toEdit);
                 context.SaveChanges();
                 return Ok();
+            }
+        }
+
+        [HttpGet]
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
+        public async Task<IActionResult> GetUsers()
+        {
+            using (var context = new ApiContext())
+            {
+                var list = new List<UsersDto>();
+                foreach (var user in context.Users)
+                {
+                    var userPartically = new UsersDto { Name = user.UserName, Role = user.Role.ToString() };
+                    list.Add(userPartically);
+                }
+                return Ok(list);
             }
         }
 
