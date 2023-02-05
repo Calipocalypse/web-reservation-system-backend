@@ -30,7 +30,7 @@ namespace Wsr.Controllers
             var context = new ApiContext();
             var query = from reservation in context.Reservations
                         where reservation.StartDate > givenStartDateD
-                        where reservation.EndDate < givenEndDateD
+                        && reservation.EndDate < givenEndDateD
                         select reservation;
             var result = await query.ToArrayAsync();
             return Ok(result);
@@ -43,36 +43,35 @@ namespace Wsr.Controllers
         {
             var givenStartDateD = ParseDate(timeScopeDto.StartDate);
             var givenEndDateD = ParseDate(timeScopeDto.EndDate);
-            using (var context = new ApiContext())
-            {
-                var query = from reservation in context.Reservations
-                            join note in context.Notes on reservation.NoteId equals note.Id
-                            join table in context.PoolTables on reservation.PoolTableId equals table.Id
-                            join cost in context.Costs on table.CostId equals cost.Id
-                            where reservation.StartDate > givenStartDateD
-                            where reservation.EndDate < givenEndDateD
-                            select new
-                            {
-                                ReservationId = reservation.Id,
-                                ReservationBookerName = reservation.BookerName,
-                                ReservationBookerEmail = reservation.Email,
-                                ReservationBookerPhoneNumber = reservation.PhoneNumber,
-                                ReservationCreatedDate = reservation.CreatedDate.ToString(dateFormat),
-                                ReservationStartDate = reservation.StartDate.ToString(dateFormat),
-                                ReservationEndDate = reservation.EndDate.ToString(dateFormat),
-                                TableId = table.Id,
-                                TableName = table.Name,
-                                TableDescription = table.Description,
-                                CostId = table.CostId,
-                                CostName = cost.Name,
-                                CostValue = cost.CostValue,
-                                NoteId = note.Id,
-                                NoteContent = note.Content,
-                                NoteCreatedDate = note.CreatedDate.ToString(dateFormat),
-                                IsPaid = reservation.IsPaid.ToString()
-                            };
-                return Ok(await query.ToArrayAsync());
-            }
+            var context = new ApiContext();
+
+            var reservations = context.Reservations.Count();
+
+            var query = from reservation in context.Reservations
+                        join table in context.PoolTables on reservation.PoolTableId equals table.Id
+                        join cost in context.Costs on table.CostId equals cost.Id
+                        where reservation.StartDate > givenStartDateD
+                        && reservation.EndDate < givenEndDateD
+                        select new
+                        {
+                            ReservationId = reservation.Id,
+                            ReservationBookerName = reservation.BookerName,
+                            ReservationBookerEmail = reservation.Email,
+                            ReservationBookerPhoneNumber = reservation.PhoneNumber,
+                            ReservationCreatedDate = reservation.CreatedDate.ToString(dateFormat),
+                            ReservationStartDate = reservation.StartDate.ToString(dateFormat),
+                            ReservationEndDate = reservation.EndDate.ToString(dateFormat),
+                            TableId = table.Id,
+                            TableName = table.Name,
+                            TableDescription = table.Description,
+                            CostId = table.CostId,
+                            CostName = cost.Name,
+                            CostValue = cost.CostValue,
+                            IsPaid = reservation.IsPaid.ToString(),
+                            Note = reservation.Note
+                        };
+
+            return Ok(await query.ToArrayAsync());
         }
 
         [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
@@ -82,7 +81,11 @@ namespace Wsr.Controllers
         {
             using (var context = new ApiContext())
             {
-                var wantedReservation = await context.Reservations.FirstAsync(x => x.Id == id);
+                var wantedReservation = await context.Reservations.FirstOrDefaultAsync(x => x.Id == id);
+                if (wantedReservation == null)
+                {
+                    return NotFound();
+                }
                 return Ok(wantedReservation);
             }
         }
@@ -95,7 +98,6 @@ namespace Wsr.Controllers
             using (var context = new ApiContext())
             {
                 var query = from reservation in context.Reservations
-                            join note in context.Notes on reservation.NoteId equals note.Id
                             join table in context.PoolTables on reservation.PoolTableId equals table.Id
                             join cost in context.Costs on table.CostId equals cost.Id
                             where reservation.Id == id
@@ -114,11 +116,15 @@ namespace Wsr.Controllers
                                 CostId = table.CostId,
                                 CostName = cost.Name,
                                 CostValue = cost.CostValue,
-                                NoteId = note.Id,
-                                NoteContent = note.Content,
-                                NoteCreatedDate = note.CreatedDate.ToString(dateFormat)
+                                Note = reservation.Note
                             };
-                return Ok(await query.ToArrayAsync());
+                var result = await query.ToArrayAsync();
+                var firstOccurence = result.FirstOrDefault();
+                if (firstOccurence == null)
+                {
+                    return NotFound();
+                }
+                return Ok(firstOccurence);
             }
         }
 
@@ -185,9 +191,9 @@ namespace Wsr.Controllers
                     reservation.IsPaid = ParseBool(reservationDto.IsPaid);
                 }
 
-                if (reservationDto.NoteId != null)
+                if (reservationDto.Note != null)
                 {
-                    reservation.NoteId = ParseGuid(reservationDto.NoteId);
+                    reservation.Note = reservationDto.Note;
                 }
 
                 using (var context = new ApiContext())
@@ -302,9 +308,9 @@ namespace Wsr.Controllers
                 {
                     toUpdate.IsPaid = ParseBool(reservationDto.IsPaid);
                 }
-                if (reservationDto.NoteId != null)
+                if (reservationDto.Note != null)
                 {
-                    toUpdate.NoteId = ParseGuid(reservationDto.NoteId);
+                    toUpdate.Note = reservationDto.Note;
                 }
 
                 context.Update(toUpdate);

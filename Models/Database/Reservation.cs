@@ -23,8 +23,7 @@ namespace Wsr.Models.Database
         public DateTime EndDate { get; set; }
         [Required]
         public bool IsPaid { get; set; }
-        public virtual Note Note { get; set; }
-        public Guid? NoteId { get; set; }
+        public string Note { get; set; }
 
         public Reservation() 
         {

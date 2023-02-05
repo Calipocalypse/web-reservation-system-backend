@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Wsr.Data;
@@ -98,8 +99,16 @@ namespace Wsr.Controllers
                     if (costModel.CostValue != null)
                     {
                         var costValue = costModel.CostValue;
-                        var convertedValue = ConvertStringToDecimal(costValue);
-                        toUpdate.CostValue = convertedValue;
+                        try
+                        {
+                            var convertedValue = ConvertStringToDecimal(costValue);
+                            toUpdate.CostValue = convertedValue;
+                        }
+                        catch
+                        {
+                            var message = $"Can't convert {costValue} to decimal number. Use xx.xx as template";
+                            return BadRequest(message);
+                        }
                     }
 
                     if (costModel.Name != null)
@@ -120,11 +129,8 @@ namespace Wsr.Controllers
 
         private decimal ConvertStringToDecimal(string number)
         {
-            if (!Decimal.TryParse(number, out var convertedValue))
-            {
-                var message = $"Can't convert {number} to decimal number. Use xx.xx as template";
-                throw new ArgumentException(message);
-            }
+            var numberFormatInfo = new NumberFormatInfo { NumberDecimalSeparator = "." };
+            var convertedValue = Decimal.Parse(number, numberFormatInfo);
             return convertedValue;
         }
 

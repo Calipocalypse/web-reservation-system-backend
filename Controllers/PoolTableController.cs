@@ -62,7 +62,8 @@ namespace Wsr.Controllers
             {
                 try 
                 {
-                    var poolTable = await context.PoolTables.ToArrayAsync();
+                    var poolTables = await context.PoolTables.ToArrayAsync();
+                    var poolTable = poolTables.First(x => x.Id == id);
                     return Ok(poolTable);
                 }
                 catch 

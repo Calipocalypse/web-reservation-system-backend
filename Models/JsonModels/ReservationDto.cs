@@ -9,6 +9,6 @@
         public string StartDate { get; set; }
         public string EndDate { get; set; }
         public string IsPaid { get; set; }
-        public string NoteId { get; set; }
+        public string Note { get; set; }
     }
 }

@@ -4,7 +4,6 @@ using Wsr.Data;
 using Wsr.Misc;
 using Wsr.Models;
 using Wsr.Models.Authentication.Enums;
-using Wsr.Models.Database;
 
 namespace Wsr.Controllers
 {
