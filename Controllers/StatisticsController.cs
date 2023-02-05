@@ -50,7 +50,7 @@ namespace Wsr.Controllers
 
         [Route("transactions/count")]
         [AuthorizeRole(UserRole.Administrator, UserRole.Operator)]
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> Get2([FromBody] TimeScopeDto timeScopeDto)
         {
             DateTime.TryParse(timeScopeDto.StartDate, out DateTime startDate);

@@ -114,8 +114,18 @@ namespace Wsr.Controllers
         [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         public IActionResult UpdatePasword(string userName, [FromBody] string newPassword)
         {
+            var userNameJwt = User.FindFirst(ClaimTypes.NameIdentifier).Value;
+            var userRole = User.FindFirst(ClaimTypes.Role).Value;
             using (var context = new ApiContext())
             {
+                if ((UserRole)Enum.Parse(typeof(UserRole),userRole) == UserRole.Operator)
+                {
+                    if (!(userName == userNameJwt))
+                    {
+                        return Unauthorized("You can't change other users passwords. Only yours is avaible.");
+                    }
+                }
+
                 var toEdit = context.Users.FirstOrDefault(x => x.UserName == userName);
                 (string hashed, string salt) = Hasher.Hash(newPassword);
                 toEdit.HashedPassword = hashed;

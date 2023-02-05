@@ -36,6 +36,18 @@ namespace Wsr.Controllers
             return Ok(result);
         }
 
+        [Route("all")]
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
+        [HttpGet]
+        public async Task<IActionResult> GetAll()
+        {
+            var context = new ApiContext();
+            var query = from reservation in context.Reservations
+                        select reservation;
+            var result = await query.ToArrayAsync();
+            return Ok(result);
+        }
+
         [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
         [HttpGet]
         [Route("details")]
@@ -52,6 +64,40 @@ namespace Wsr.Controllers
                         join cost in context.Costs on table.CostId equals cost.Id
                         where reservation.StartDate > givenStartDateD
                         && reservation.EndDate < givenEndDateD
+                        select new
+                        {
+                            ReservationId = reservation.Id,
+                            ReservationBookerName = reservation.BookerName,
+                            ReservationBookerEmail = reservation.Email,
+                            ReservationBookerPhoneNumber = reservation.PhoneNumber,
+                            ReservationCreatedDate = reservation.CreatedDate.ToString(dateFormat),
+                            ReservationStartDate = reservation.StartDate.ToString(dateFormat),
+                            ReservationEndDate = reservation.EndDate.ToString(dateFormat),
+                            TableId = table.Id,
+                            TableName = table.Name,
+                            TableDescription = table.Description,
+                            CostId = table.CostId,
+                            CostName = cost.Name,
+                            CostValue = cost.CostValue,
+                            IsPaid = reservation.IsPaid.ToString(),
+                            Note = reservation.Note
+                        };
+
+            return Ok(await query.ToArrayAsync());
+        }
+
+        [AuthorizeRole(UserRole.Operator, UserRole.Administrator)]
+        [HttpGet]
+        [Route("details/all")]
+        public async Task<IActionResult> GetDetailed()
+        {
+            var context = new ApiContext();
+
+            var reservations = context.Reservations.Count();
+
+            var query = from reservation in context.Reservations
+                        join table in context.PoolTables on reservation.PoolTableId equals table.Id
+                        join cost in context.Costs on table.CostId equals cost.Id
                         select new
                         {
                             ReservationId = reservation.Id,
