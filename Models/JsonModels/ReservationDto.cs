@@ -1,4 +1,6 @@
-﻿namespace Wsr.Models.JsonModels
+﻿using Wsr.Models.Database.Enums;
+
+namespace Wsr.Models.JsonModels
 {
     public class ReservationDto
     {
@@ -10,5 +12,6 @@
         public string EndDate { get; set; }
         public string IsPaid { get; set; }
         public string Note { get; set; }
+        public string ReservationType { get; set; }
     }
 }

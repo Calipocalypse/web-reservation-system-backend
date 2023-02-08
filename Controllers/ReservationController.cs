@@ -9,6 +9,7 @@ using Wsr.Data;
 using Wsr.Misc;
 using Wsr.Models.Authentication.Enums;
 using Wsr.Models.Database;
+using Wsr.Models.Database.Enums;
 using Wsr.Models.Exceptions;
 using Wsr.Models.JsonModels;
 
@@ -68,6 +69,7 @@ namespace Wsr.Controllers
                         {
                             ReservationId = reservation.Id,
                             ReservationBookerName = reservation.BookerName,
+                            ReservationType = reservation.ReservationType.ToString(),
                             ReservationBookerEmail = reservation.Email,
                             ReservationBookerPhoneNumber = reservation.PhoneNumber,
                             ReservationCreatedDate = reservation.CreatedDate.ToString(dateFormat),
@@ -102,6 +104,7 @@ namespace Wsr.Controllers
                         {
                             ReservationId = reservation.Id,
                             ReservationBookerName = reservation.BookerName,
+                            ReservationType = reservation.ReservationType.ToString(),
                             ReservationBookerEmail = reservation.Email,
                             ReservationBookerPhoneNumber = reservation.PhoneNumber,
                             ReservationCreatedDate = reservation.CreatedDate.ToString(dateFormat),
@@ -151,6 +154,7 @@ namespace Wsr.Controllers
                             {
                                 ReservationId = reservation.Id,
                                 ReservationBookerName = reservation.BookerName,
+                                ReservationType = reservation.ReservationType.ToString(),
                                 ReservationBookerEmail = reservation.Email,
                                 ReservationBookerPhoneNumber = reservation.PhoneNumber,
                                 ReservationCreatedDate = reservation.CreatedDate.ToString(dateFormat),
@@ -240,6 +244,16 @@ namespace Wsr.Controllers
                 if (reservationDto.Note != null)
                 {
                     reservation.Note = reservationDto.Note;
+                }
+
+                if (reservationDto.ReservationType != null)
+                {
+                    var failed = Enum.TryParse(typeof(ReservationType), reservationDto.ReservationType, out var reservationType);
+                    if (failed)
+                    {
+                        return BadRequest($"Can't parse {reservationDto.ReservationType} to enum");
+                    }
+                    reservation.ReservationType = (ReservationType)reservationType;
                 }
 
                 using (var context = new ApiContext())

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.ComponentModel.DataAnnotations;
+using Wsr.Models.Database.Enums;
 
 namespace Wsr.Models.Database
 {
@@ -15,6 +16,8 @@ namespace Wsr.Models.Database
         public string BookerName { get; set; }
         public string Email { get; set; }
         public string PhoneNumber { get; set; }
+        [Required]
+        public ReservationType ReservationType { get; set; }
         [Required]
         public DateTime CreatedDate { get; set; }
         [Required]
