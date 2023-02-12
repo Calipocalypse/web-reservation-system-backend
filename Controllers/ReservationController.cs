@@ -248,7 +248,7 @@ namespace Wsr.Controllers
 
                 if (reservationDto.ReservationType != null)
                 {
-                    var failed = Enum.TryParse(typeof(ReservationType), reservationDto.ReservationType, out var reservationType);
+                    var failed = Enum.TryParse<ReservationType>(reservationDto.ReservationType, false, out var reservationType);
                     if (failed)
                     {
                         return BadRequest($"Can't parse {reservationDto.ReservationType} to enum");
